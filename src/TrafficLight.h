@@ -57,6 +57,9 @@ private:
 
     std::condition_variable _condition;
     std::mutex _mutex;
+
+    static std::random_device device;
+    static std::default_random_engine generator;
 };
 
 #endif

@@ -23,6 +23,9 @@ void MessageQueue<T>::send(T &&msg)
 
 /* Implementation of class "TrafficLight" */
 
+std::random_device TrafficLight::device;
+std::default_random_engine TrafficLight::generator(device());
+
 TrafficLight::TrafficLight()
 {
     _currentPhase = TrafficLightPhase::red;
@@ -43,6 +46,7 @@ TrafficLightPhase TrafficLight::getCurrentPhase()
 void TrafficLight::simulate()
 {
     // FP.2b : Finally, the private method „cycleThroughPhases“ should be started in a thread when the public method „simulate“ is called. To do this, use the thread queue in the base class.
+    threads.emplace_back(std::thread(&TrafficLight::cycleThroughPhases, this));
 }
 
 // virtual function which is executed in a thread
@@ -52,4 +56,30 @@ void TrafficLight::cycleThroughPhases()
     // and toggles the current phase of the traffic light between red and green and sends an update method
     // to the message queue using move semantics. The cycle duration should be a random value between 4 and 6 seconds.
     // Also, the while-loop should use std::this_thread::sleep_for to wait 1ms between two cycles.
+
+    std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+    std::chrono::high_resolution_clock::time_point t2;
+    std::uniform_int_distribution<int> distribution(4000, 6000); // random number between 4000-6000 millisecond
+    auto randDuration = distribution(generator);
+    while (1)
+    {
+        // measure time passed since the last phase started
+        t2 = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+        if (randDuration <= duration)
+        {
+            // update traffic light phase
+            _currentPhase = (_currentPhase == TrafficLightPhase::green) ? TrafficLightPhase::red : TrafficLightPhase::green;
+
+            // TODO: send update to message queue
+
+            // reset phase starting time
+            t1 = std::chrono::high_resolution_clock::now();
+
+            // genreate new duration
+            randDuration = distribution(generator);
+        }
+        // wait for 1ms between two cycles
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
 }
