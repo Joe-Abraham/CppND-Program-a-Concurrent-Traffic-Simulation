@@ -1,6 +1,7 @@
 #ifndef TRAFFICLIGHT_H
 #define TRAFFICLIGHT_H
 
+#include <random>
 #include <mutex>
 #include <deque>
 #include <condition_variable>
